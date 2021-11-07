@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using MySql.Data.MySqlClient;
 
@@ -113,6 +114,37 @@ namespace Radius
       }
 
       return false;
+    }
+
+    private static string ConvertToJson(string connectionString)
+    {
+      List<LatLngFileNameModel> latLngFileNames = new List<LatLngFileNameModel>();
+      string gpslocationsgroupedby10KmdistancsJson;
+
+      string sqlGpslocations = "select * from gpslocationsgroupedby10kmdistancs";
+
+      using (MySqlConnection mySqlConnection = new MySqlConnection(connectionString))
+      using (MySqlCommand mySqlCommand = new MySqlCommand(sqlGpslocations, mySqlConnection))
+      {
+        mySqlConnection.Open();
+        MySqlDataReader mySqlDataReader = mySqlCommand.ExecuteReader();
+
+        while (mySqlDataReader.Read())
+        {
+          LatLngFileNameModel latLngFileName = new LatLngFileNameModel
+          {
+            Latitude = mySqlDataReader["Latitude"].ToString(),
+            Longitude = mySqlDataReader["Longitude"].ToString(),
+            FileName = mySqlDataReader["FileName"].ToString()
+          };
+
+          latLngFileNames.Add(latLngFileName);
+        }
+
+        gpslocationsgroupedby10KmdistancsJson = JsonSerializer.Serialize(latLngFileNames);
+      }
+
+      return gpslocationsgroupedby10KmdistancsJson;
     }
 
   }
